@@ -59,21 +59,21 @@ def parse_args():
         '--cfg',
         dest='cfg',
         help='cfg model file (/path/to/model_config.yaml)',
-        default=None,
+        default='configs/12_2017_baselines/e2e_mask_rcnn_R-101-FPN_2x.yaml',
         type=str
     )
     parser.add_argument(
         '--wts',
         dest='weights',
         help='weights model file (/path/to/model_weights.pkl)',
-        default=None,
+        default='https://s3-us-west-2.amazonaws.com/detectron/35861858/12_2017_baselines/e2e_mask_rcnn_R-101-FPN_2x.yaml.02_32_51.SgT4y1cO/output/train/coco_2014_train:coco_2014_valminusminival/generalized_rcnn/model_final.pkl',
         type=str
     )
     parser.add_argument(
         '--output-dir',
         dest='output_dir',
         help='directory for visualization pdfs (default: /tmp/infer_simple)',
-        default='/tmp/infer_simple',
+        default='/workspace/mask',
         type=str
     )
     parser.add_argument(
@@ -96,7 +96,7 @@ def parse_args():
         '--output-ext',
         dest='output_ext',
         help='output image file format (default: pdf)',
-        default='pdf',
+        default='jpg',
         type=str
     )
     if len(sys.argv) == 1:
@@ -126,6 +126,8 @@ def main(args):
     else:
         im_list = [args.im_or_folder]
 
+    count = 0
+    overlap = 0
     for i, im_name in enumerate(im_list):
         out_name = os.path.join(
             args.output_dir, '{}'.format(os.path.basename(im_name) + '.' + args.output_ext)
@@ -147,7 +149,7 @@ def main(args):
                 'rest (caches and auto-tuning need to warm up)'
             )
 
-        vis_utils.vis_one_image(
+        tmp = vis_utils.vis_one_image(
             im[:, :, ::-1],  # BGR -> RGB for visualization
             im_name,
             args.output_dir,
@@ -163,6 +165,11 @@ def main(args):
             out_when_no_box=args.out_when_no_box
         )
 
+        if not tmp==0:
+            count +=1
+            overlap +=tmp
+
+    print('average overlap: %.4f'%(overlap/count))
 
 if __name__ == '__main__':
     workspace.GlobalInit(['caffe2', '--caffe2_log_level=0'])
